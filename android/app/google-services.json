@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "930035387969",
+    "project_id": "rawat-jalan-peudada",
+    "storage_bucket": "rawat-jalan-peudada.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:930035387969:android:272e2b4d6183cdc82080c0",
+        "android_client_info": {
+          "package_name": "com.pak_ikbal.rawat_jalan"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD4Z991HljiRev-1o5RT7TaClM0Uj8Rgv0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
