@@ -1,51 +1,95 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:rawat_jalan/pages/admin/admin_page.dart';
+import 'package:rawat_jalan/pages/auth_page.dart';
+import 'package:rawat_jalan/pages/pasien_page.dart';
+import 'package:rawat_jalan/pages/user_data_page.dart';
 import 'firebase_options.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final userRef = FirebaseFirestore.instance.collection('users');
+
+  Future<Map<String, dynamic>?> user(String userUID) async {
+    final snap = await userRef.doc(userUID).get();
+
+    return snap.data();
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Aplikasi Pasein Rawat Jalan Kec. peudada',
+      title: 'Aplikasi Pasein Rawat Jalan Kec. Jeumpa',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         appBarTheme: AppBarTheme(
           backgroundColor: Theme.of(context).colorScheme.primary,
         ),
       ),
-      home: const MyHomePage(),
-    );
-  }
-}
+      home: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            // Bisa tampilkan loading
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
+          if (snapshot.hasData) {
+            User currentUser = snapshot.data!;
+            Future<Map<String, dynamic>?> userFuture = user(currentUser.uid);
 
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
+            return FutureBuilder(
+              future: userFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  // Bisa tampilkan loading
+                  return const Scaffold(
+                    body: Center(child: CircularProgressIndicator()),
+                  );
+                }
 
-class _MyHomePageState extends State<MyHomePage> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text("Rawat Jalan Peudada"),
+                final userData = snapshot.data;
+
+                if (userData == null) {
+                  return UserDataPage(
+                    user: currentUser,
+                    onFinished: () {
+                      setState(() {
+                        userFuture = user(currentUser.uid);
+                      });
+                    },
+                  );
+                }
+
+                if (userData['role'] == 'admin') {
+                  return AdminPage();
+                } else {
+                  return PasienPage();
+                }
+              },
+            );
+          } else {
+            return const AuthPage();
+          }
+        },
       ),
-      body: Center(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
